@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASBOF Adjudicator Recorder POC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Urbanist:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="canvas-glow canvas-glow-a"></div>
+    <div class="canvas-glow canvas-glow-b"></div>
+
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand-block">
+          <img
+            class="brand-mark"
+            src="https://asbof.org.au/wp-content/uploads/2018/01/fav-sbf-iphone.png"
+            alt="ASBOF"
+          />
+          <div>
+            <p class="kicker">Australian School Band and Orchestra Festival</p>
+            <h1>Adjudicator Audio Recorder</h1>
+            <p class="sub-kicker">Proof of Concept for in-festival use</p>
+          </div>
+        </div>
+        <div class="status-chip" id="systemStatus">Awaiting microphone access</div>
+      </header>
+
+      <section class="panel-grid" id="panelGrid">
+        <section class="panel" id="setupPanel" aria-labelledby="setupHeading">
+          <h2 id="setupHeading">1. Session Setup</h2>
+          <div class="field-grid">
+            <label class="field" for="adjudicatorName">
+              <span>Adjudicator Name</span>
+              <input id="adjudicatorName" type="text" placeholder="e.g. J. Williams" />
+            </label>
+
+            <label class="field" for="festivalDate">
+              <span>Festival Date</span>
+              <select id="festivalDate"></select>
+            </label>
+
+            <label class="field" for="venueSelect">
+              <span>Venue</span>
+              <select id="venueSelect"></select>
+            </label>
+
+            <label class="field" for="stageSelect">
+              <span>Stage (Optional Filter)</span>
+              <select id="stageSelect"></select>
+            </label>
+
+            <label class="field input-stack" for="audioInputSelect">
+              <span>Audio Input Device</span>
+              <select id="audioInputSelect"></select>
+              <small id="audioHint">Connect interface + microphone before selecting.</small>
+            </label>
+
+            <div class="level-check" id="micTestPanel" aria-live="polite" hidden>
+              <div class="level-head">
+                <span>Microphone Level Check</span>
+                <strong id="micLevelValue">-- dB</strong>
+              </div>
+              <div class="level-meter" role="meter" aria-label="Microphone signal level">
+                <div class="level-meter-target" aria-hidden="true"></div>
+                <div class="level-meter-fill" id="micLevelFill"></div>
+              </div>
+              <small class="level-target-note">Target voice level: -24 dB to -12 dB</small>
+              <small id="micLevelHint">Enable microphone, then speak to check level.</small>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-strong" id="enableMicButton" type="button">Enable Microphone</button>
+            <button class="btn btn-light" id="refreshInputsButton" type="button">Refresh Inputs</button>
+            <button class="btn btn-light" id="toggleMicTestButton" type="button">Test Microphone</button>
+          </div>
+        </section>
+
+        <section class="panel" id="bandPanel" aria-labelledby="bandHeading">
+          <h2 id="bandHeading">2. Select Current Band</h2>
+          <div class="field-grid compact">
+            <label class="field" for="bandSearch">
+              <span>Search School or Ensemble</span>
+              <input id="bandSearch" type="search" placeholder="Start typing to filter today's lineup" />
+            </label>
+          </div>
+
+          <div class="inline-meta">
+            <span id="scheduleCount">0 scheduled ensembles</span>
+            <span id="selectedBandLabel">No band selected</span>
+          </div>
+
+          <div class="band-list" id="bandList" role="listbox" aria-label="Band schedule"></div>
+        </section>
+
+        <section class="panel recorder-panel" id="recorderPanel" aria-labelledby="recordingHeading" hidden>
+          <h2 id="recordingHeading">3. Record + Submit</h2>
+          <div class="recorder-head">
+            <div>
+              <p class="meta-label">Recording For</p>
+              <p class="meta-value" id="recordingBand">Select a band first</p>
+              <p class="meta-subvalue" id="recordingBandMeta"></p>
+            </div>
+            <div class="recorder-head-controls">
+              <div class="state-badge" id="recordingState">Idle</div>
+              <button class="btn btn-light btn-xs" id="changeBandBtn" type="button">Change Band</button>
+            </div>
+          </div>
+
+          <div class="timer" id="timer">00:00</div>
+
+          <div class="recording-level" id="recordingLevelWrap" hidden aria-live="polite">
+            <div class="level-head level-head-compact">
+              <span>Live Input Level</span>
+              <strong id="recordingLevelValue">-- dB</strong>
+            </div>
+            <div class="level-meter" role="meter" aria-label="Recording input level">
+              <div class="level-meter-target" aria-hidden="true"></div>
+              <div class="level-meter-fill" id="recordingLevelFill"></div>
+            </div>
+            <small class="level-target-note">Target voice level: -24 dB to -12 dB</small>
+            <small id="recordingLevelHint">Aim for target voice level while recording.</small>
+          </div>
+
+          <div class="button-row wrap">
+            <button class="btn btn-strong" id="startBtn" type="button">Start</button>
+            <button class="btn btn-warning" id="pauseBtn" type="button" disabled>Pause</button>
+            <button class="btn btn-light" id="resumeBtn" type="button" disabled>Resume</button>
+            <button class="btn btn-danger" id="stopBtn" type="button" disabled>Stop</button>
+          </div>
+
+          <div class="marker-panel">
+            <div class="marker-head">
+              <p class="meta-label">Piece Markers</p>
+              <button class="btn btn-light marker-btn" id="addMarkerBtn" type="button" disabled>
+                Mark New Piece
+              </button>
+            </div>
+            <p class="marker-help">Use a marker each time a new piece begins.</p>
+            <div class="marker-list" id="markerList"></div>
+          </div>
+
+          <label class="field input-stack" for="notesField">
+            <span>Optional Adjudicator Notes (metadata only)</span>
+            <textarea id="notesField" rows="3" placeholder="Optional notes to travel with the recording"></textarea>
+          </label>
+
+          <div class="playback-wrap" id="playbackWrap" hidden>
+            <p class="meta-label">Playback</p>
+            <audio id="audioPlayback" controls></audio>
+          </div>
+
+          <div class="submit-wrap">
+            <button class="btn btn-submit" id="submitBtn" type="button" disabled>Submit Recording (Demo)</button>
+            <div class="progress-track" id="uploadTrack" hidden>
+              <div class="progress-fill" id="uploadFill"></div>
+            </div>
+            <p id="submitStatus" class="submit-status">Record, stop, then submit.</p>
+          </div>
+        </section>
+
+        <section class="panel confirmation-panel" id="confirmationPanel" hidden aria-live="polite">
+          <h2>4. Submission Confirmed</h2>
+          <p class="confirmation-title">Recording delivered successfully.</p>
+          <div id="confirmationDetails" class="confirmation-details"></div>
+          <button class="btn btn-strong" type="button" id="newRecordingBtn">Select Next Band</button>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
